@@ -24,7 +24,8 @@ const ALLOWED_ORIGINS = [
   'http://localhost:5173', // Vite default
   'http://localhost:8080',
   'http://localhost:8081',
-  // Production frontend URL — set FRONTEND_URL in Railway environment variables
+  'https://wearreforma.netlify.app',  // add this
+  'https://wearreforma.com',           // add this
   ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
 ];
 
