@@ -179,7 +179,7 @@ router.put('/:id', async (req: Request, res: Response) => {
   const { name, description, parentId } = req.body as {
     name?: string;
     description?: string;
-    parentId?: string | null;
+    parentId?: string | string[] | null;
   };
 
   if (!name) {
