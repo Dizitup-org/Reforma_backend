@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import pool from '../db.js';
 
 const router = Router();
@@ -72,7 +72,7 @@ async function validateParentCollection(parentId?: string | null, childId?: stri
   return { parentId };
 }
 
-router.use(async (_req, _res, next) => {
+router.use(async (_req: Request, _res: Response, next: NextFunction) => {
   try {
     await ensureCollectionsSchema();
     next();
@@ -176,11 +176,15 @@ router.post('/', async (req: Request, res: Response) => {
 // Also cascades the new name to all products that carried the old name.
 router.put('/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { name, description, parentId } = req.body as {
+  const { name, description } = req.body as {
     name?: string;
     description?: string;
-    parentId?: string | string[] | null;
   };
+
+  const rawParentId = (req.body as any).parentId;
+  const parentId: string | null = typeof rawParentId === 'string'
+    ? rawParentId
+    : (Array.isArray(rawParentId) && typeof rawParentId[0] === 'string' ? rawParentId[0] : null);
 
   if (!name) {
     return res.status(400).json({ message: 'name is required' });
@@ -229,7 +233,7 @@ router.put('/:id', async (req: Request, res: Response) => {
          SET name = $1, description = $2, parent_id = $3, updated_at = NOW()
        WHERE id = $4
        RETURNING *`,
-      [name, description ?? null, (Array.isArray(parentId) ? parentId[0] : parentId) ?? null, id],
+      [name, description ?? null, parentId, id],
     );
 
     // 3️⃣  Cascade: update all products that had the old collection name
