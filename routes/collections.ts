@@ -229,7 +229,7 @@ router.put('/:id', async (req: Request, res: Response) => {
          SET name = $1, description = $2, parent_id = $3, updated_at = NOW()
        WHERE id = $4
        RETURNING *`,
-      [name, description ?? null, (parentId as string) ?? null, id],
+      [name, description ?? null, typeof parentId === 'string' ? parentId : null, id],
     );
 
     // 3️⃣  Cascade: update all products that had the old collection name
