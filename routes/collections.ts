@@ -43,7 +43,7 @@ async function wouldCreateCycle(targetId: string, ancestorCandidateId: string): 
     const { rows } = await pool.query(
       'SELECT parent_id FROM collections WHERE id = $1',
       [currentId],
-    );
+    ) as { rows: Array<{ parent_id: string | null }> };
     currentId = rows.length > 0 ? (rows[0].parent_id ?? null) : null;
   }
 
@@ -229,7 +229,7 @@ router.put('/:id', async (req: Request, res: Response) => {
          SET name = $1, description = $2, parent_id = $3, updated_at = NOW()
        WHERE id = $4
        RETURNING *`,
-      [name, description ?? null, parentId ?? null, id],
+      [name, description ?? null, (parentId as string) ?? null, id],
     );
 
     // 3️⃣  Cascade: update all products that had the old collection name
