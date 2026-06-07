@@ -141,11 +141,19 @@ router.post('/sync-products', async (_req: Request, res: Response) => {
 
 // ── POST /api/collections ────────────────────────────────────────────────────
 router.post('/', async (req: Request, res: Response) => {
-  const { name, description, parentId } = req.body as {
+  const { name, description } = req.body as {
     name: string;
     description?: string;
-    parentId?: string | null;
   };
+
+  const rawParentId = (req.body as any).parentId || (req.body as any).parent_id;
+  let parentId: string | null = typeof rawParentId === 'string'
+    ? rawParentId
+    : (Array.isArray(rawParentId) && typeof rawParentId[0] === 'string' ? rawParentId[0] : null);
+
+  if (parentId === 'null' || parentId === 'undefined' || parentId === '') {
+    parentId = null;
+  }
 
   if (!name) {
     return res.status(400).json({ message: 'name is required' });
@@ -181,10 +189,14 @@ router.put('/:id', async (req: Request, res: Response) => {
     description?: string;
   };
 
-  const rawParentId = (req.body as any).parentId;
-  const parentId: string | null = typeof rawParentId === 'string'
+  const rawParentId = (req.body as any).parentId || (req.body as any).parent_id;
+  let parentId: string | null = typeof rawParentId === 'string'
     ? rawParentId
     : (Array.isArray(rawParentId) && typeof rawParentId[0] === 'string' ? rawParentId[0] : null);
+
+  if (parentId === 'null' || parentId === 'undefined' || parentId === '') {
+    parentId = null;
+  }
 
   if (!name) {
     return res.status(400).json({ message: 'name is required' });
@@ -221,7 +233,7 @@ router.put('/:id', async (req: Request, res: Response) => {
       }
 
       // Only block actual circular references — unlimited nesting depth is supported
-      if (await wouldCreateCycle(id, parentId)) {
+      if (await wouldCreateCycle(id as string, parentId)) {
         await client.query('ROLLBACK');
         return res.status(400).json({ message: 'Cannot assign a collection as its own ancestor (circular reference)' });
       }
